@@ -239,6 +239,14 @@ ifElseP n = do
   elseBody <- option (Lines []) (wsn *> stringP "else:" *> wsn <* charP '\n' *> indentedLinesP (n+1))
   return $ IfElse condition ifBody elseBody
 
+whileP :: Int -> Parser Structure
+whileP n = do
+  _ <- wsn *> stringP "while" *> wsn
+  condition <- parseOp
+  _ <- wsn *> charP ':' *> wsn <* charP '\n'
+  body <- option (Lines []) (indentedLinesP (n+1))
+  return $ While condition body
+
 indentedLineP :: Int -> Parser Structure
 indentedLineP 0 = lineP 0
 indentedLineP n = try (count n (stringP "  ") *> lineP n)
@@ -247,7 +255,7 @@ indentedLinesP :: Int -> Parser Structure
 indentedLinesP n = Lines <$> many (try (indentedLineP n))
 
 lineP :: Int -> Parser Structure
-lineP n = emptyLine <|> assignP <|> assignFromFile <|> printP <|> overwriteFile <|> appendToFile <|> ifElseP n
+lineP n = emptyLine <|> assignP <|> assignFromFile <|> printP <|> overwriteFile <|> appendToFile <|> ifElseP n <|> whileP n
 
 runFile :: String -> IO ()
 runFile fileName = do

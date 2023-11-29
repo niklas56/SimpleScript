@@ -43,6 +43,7 @@ data Structure
   | OverwriteFile Op Op
   | AppendFile Op Op
   | IfElse Op Structure Structure
+  | While Op Structure
   | EmptyLine
   deriving Show
 
@@ -166,6 +167,10 @@ execute vars (Lines ((IfElse condition ifBody elseBody):xs)) = do
   let (BoolVal cond) = eval vars condition
   if cond then execute vars ifBody else execute vars elseBody
   >>= \newVars -> execute (mergeVars vars newVars) (Lines xs)
+execute vars (Lines ((While condition body):xs)) = do
+  let (BoolVal cond) = eval vars condition
+  if cond then execute vars body >>= \newVars -> execute (mergeVars vars newVars) (Lines ((While condition body):xs))
+  else execute vars (Lines xs)
 execute vars (Lines ((Print e:xs))) = do
   putStrLn (getStr 0 vars (eval vars e))
   execute vars (Lines xs)
