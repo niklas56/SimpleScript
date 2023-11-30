@@ -113,26 +113,34 @@ pStr :: Parser Atom
 pStr = StrVal <$> stringLiteral
 
 pBool :: Parser Atom
-pBool = f <$> (stringP "True" <|> stringP "False")
+pBool = f <$> (stringP "true" <|> stringP "false")
   where
-    f "True" = BoolVal True
-    f "False" = BoolVal False
+    f "true" = BoolVal True
+    f "false" = BoolVal False
 
 pVName :: Parser String
 pVName = spanP (\c -> c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z')
 
-pList :: Parser Atom
-pList = ListVal <$> (charP '[' *> ws *> sepBy parseOp (ws *> charP ',' <* ws) <* ws <* charP ']')
-
 atom :: Parser Atom
-atom = pBool <|> (VarName <$> notNull (pVName)) <|> pFlt <|> pInt <|> pStr <|> pList
+atom = pBool <|> (VarName <$> notNull (pVName)) <|> pFlt <|> pInt <|> pStr
 
 
 --operation parsers
 
+pList :: Parser Op
+pList = CreateList <$> (charP '[' *> ws *> sepBy parseOp (ws *> charP ',' <* ws) <* ws <* charP ']')
+
+pLength :: Parser Op
+pLength = Length <$> (charP '#' *> parseOp)
+
+pNot :: Parser Op
+pNot = Not <$> (charP '!'*> parseOp)
+
+pNegative :: Parser Op
+pNegative = (Sub (Value (IntVal 0))) <$> (charP '-' *> parseOp)
 
 parseValue :: Parser Op
-parseValue = (Value <$> atom) <|> (Bracket <$> (wsn *> charP '(' *> ws *> parseOp <* ws <* charP ')')) <* wsn
+parseValue = (Value <$> atom) <|> pList <|> pLength <|> pNot <|> pNegative <|> (Bracket <$> (wsn *> charP '(' *> ws *> parseOp <* ws <* charP ')')) <* wsn
 
 parseGetIndex :: Parser Op
 parseGetIndex = do

@@ -9,7 +9,7 @@ data Atom
   | FltVal Double
   | StrVal String
   | BoolVal Bool
-  | ListVal [Op]
+  | ListVal [Atom]
   | VarName String
   | FileName String
   deriving (Show, Eq)
@@ -30,7 +30,9 @@ data Op
   | And Op Op
   | Or Op Op
   | Not Op
+  | CreateList [Op]
   | AccessList Op Op
+  | Length Op
   | Value Atom
   | Bracket Op
   deriving (Show, Eq)
@@ -52,13 +54,16 @@ getStr 0 vars (StrVal s) = "\"" ++ s ++ "\""
 getStr 1 vars (StrVal s) = s
 getStr _ vars (FltVal f) = show f
 getStr _ vars (IntVal i) = show i
-getStr _ vars (BoolVal b) = show b
+getStr _ vars (BoolVal True) = "true"
+getStr _ vars (BoolVal False) = "false"
 getStr _ vars (ListVal l) = getStrList vars l
 
-getStrList :: [(String, Atom)] -> [Op] -> String
-getStrList vars l = "[" ++ content ++ "]"
+getStrList :: [(String, Atom)] -> [Atom] -> String
+getStrList vars [] = "[]"
+getStrList vars (x:xs) = "[" ++ content ++ "]"
   where
-    content = foldl (\acc x -> acc ++ "," ++ getStr 0 vars (eval vars x)) (getStr 0 vars (eval vars (head l))) (tail l)
+    content = foldl (\acc x -> acc ++ "," ++ getStr 0 vars x) (getStr 0 vars x) xs
+
 
 --evaluate an Operation
 eval:: [(String, Atom)] -> Op -> Atom
@@ -118,7 +123,7 @@ eval vars (Comp e1 e2) =
     (FltVal x1, FltVal x2) -> BoolVal (x1 == x2)
     (StrVal x1, StrVal x2) -> BoolVal (x1 == x2)
     (BoolVal x1, BoolVal x2) -> BoolVal (x1 == x2)
-    (ListVal x1, ListVal x2) -> BoolVal ((eval vars <$> x1) == (eval vars <$> x2))
+    (ListVal x1, ListVal x2) -> BoolVal (x1 == x2)
     _ -> error "Type error while evaluating '=='"
 eval vars (NComp e1 e2) = let (BoolVal x) = eval vars (Comp e1 e2) in BoolVal (not x)
 eval vars (Bigger e1 e2) = 
@@ -145,14 +150,22 @@ eval vars (Not e1) =
     _ -> error "Type error while evaluating '!'"
 eval vars (AccessList e1 e2) = 
   case (eval vars e1, eval vars e2) of
-    (ListVal list, IntVal index) -> eval vars (list !! index)
+    (ListVal list, IntVal index) -> list !! index
     (StrVal str, IntVal index) -> StrVal [str !! index]
     _ -> error "Type error while evaluating '!'"
+eval vars (Length x) = 
+  case (eval vars x) of
+    (ListVal l) -> IntVal (length l)
+    (StrVal s) -> IntVal (length s)
+eval vars (CreateList ops) = ListVal (map (eval vars) ops)
 eval vars (Bracket e1) = eval vars e1
  
 
 assign:: [(String, Atom)] -> Structure -> [(String, Atom)]
-assign vars (Assign name val) = (name, eval vars val):vars
+assign vars (Assign name val) = 
+  case lookup name vars of
+    Just a -> (name, eval vars val):(filter (\x -> fst x /= name) vars)
+    Nothing -> (name, eval vars val):vars
 
 mergeVars:: [(String, Atom)] -> [(String, Atom)] -> [(String, Atom)]
 mergeVars [] _ = []
@@ -165,17 +178,24 @@ execute vars (Lines []) = return (vars)
 execute vars (Lines ((EmptyLine):xs)) = execute vars (Lines xs)
 execute vars (Lines ((IfElse condition ifBody elseBody):xs)) = do
   let (BoolVal cond) = eval vars condition
-  if cond then execute vars ifBody else execute vars elseBody
-  >>= \newVars -> execute (mergeVars vars newVars) (Lines xs)
+  newVars <- if cond then execute vars ifBody else execute vars elseBody
+  execute (mergeVars vars newVars) (Lines xs)
 execute vars (Lines ((While condition body):xs)) = do
   let (BoolVal cond) = eval vars condition
-  if cond then execute vars body >>= \newVars -> execute (mergeVars vars newVars) (Lines ((While condition body):xs))
-  else execute vars (Lines xs)
+  if cond 
+    then do
+      newVars <- execute vars body
+      execute (mergeVars vars newVars) (Lines ((While condition body):xs))
+    else execute vars (Lines xs)
 execute vars (Lines ((Print e:xs))) = do
   putStrLn (getStr 0 vars (eval vars e))
   execute vars (Lines xs)
-execute vars (Lines ((Assign name val:xs))) = do
-  execute (assign vars (Assign name val)) (Lines xs)
+execute vars (Lines ((Assign var (CreateList ops):xs))) = do
+  let evaluatedList = ListVal (map (eval vars) ops)
+  execute ((var, evaluatedList) : vars) (Lines xs)
+execute vars (Lines ((Assign var op:xs))) = do
+  let value = eval vars op
+  execute ((var, value) : vars) (Lines xs)
 execute vars (Lines ((AssignFromFile name val:xs))) = do
   let (StrVal path) = eval vars val
   input <- readFile path
