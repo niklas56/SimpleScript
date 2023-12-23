@@ -1,0 +1,62 @@
+{
+  "name": "simple-script",
+  "displayName": "SimpleScript",
+  "description": "",
+  "version": "0.0.1",
+  "main": "./extension.js",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [{
+      "id": "script",
+      "aliases": ["Simple Script", "sc"],
+      "extensions": [".sc"],
+      "configuration": "./language-configuration.json"
+    }],
+    "grammars": [{
+      "language": "script",
+      "scopeName": "source.sc",
+      "path": "./syntaxes/sc.tmLanguage.json"
+    }],
+    "commands": [
+      {
+          "command": "extension.runMyLanguage",
+          "title": "Run Script",
+          "icon": "$(run)"
+      }
+    ],
+    "menus": {
+       "editor/title": [
+            {
+                "command": "extension.runMyLanguage",
+                "group": "navigation",
+                "when": "resourceLangId == script"
+            }
+       ]
+    },
+    "configuration": {
+      "title": "Simple Script",
+      "properties": {
+        "SimpleScript.editor.tabSize": {
+          "type": "number",
+          "default": 3,
+          "description": "Tab size"
+        },
+        "SimpleScript.editor.insertSpaces": {
+          "type": "boolean",
+          "default": true,
+          "description": "Insert spaces instead of tabs"
+        },
+        "SimpleScript.editor.autoIndent": {
+          "type": "string",
+          "default": "keep",
+          "description": "Auto indent"
+        }
+      }
+    }
+  }
+}

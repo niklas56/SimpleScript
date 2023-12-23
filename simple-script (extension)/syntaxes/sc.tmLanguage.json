@@ -1,0 +1,59 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "Simple Script",
+	"patterns": [
+		{
+			"include": "#keywords"
+		},
+		{
+			"include": "#strings"
+		},
+		{
+			"include": "#functions"
+		},
+		{
+			"include": "#variables"
+		},
+		{
+			"include": "#comments"
+		}
+	],
+	"repository": {
+		"keywords": {
+			"patterns": [{
+				"name": "keyword.control.sc",
+				"match": "\\b(if|while|for|return|break|import|else|fn)\\b"
+			}]
+		},
+		"strings": {
+			"name": "string.quoted.double.sc",
+			"begin": "\"",
+			"end": "\"",
+			"patterns": [
+				{
+					"name": "constant.character.escape.sc",
+					"match": "\\\\."
+				}
+			]
+		},
+		"variables": {
+			"patterns": [{
+                "name": "variable.other.sc",
+                "match": "\\b[_a-zA-Z][_a-zA-Z0-9]*\\b"
+            }]
+		},
+		"functions": {
+			"patterns": [{
+				"name": "entity.name.function.sc",
+				"match": "\\b[a-zA-Z][_a-zA-Z0-9]*\\b(?=\\()"
+			}]
+		},
+		"comments": {
+			"patterns": [{
+				"name": "comment.line.double-slash.sc",
+				"match": "//.*"
+			}]
+		}
+	},
+	"scopeName": "source.sc"
+}
