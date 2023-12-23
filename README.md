@@ -121,3 +121,4 @@ Or use `<-` to assign file-content to a variable:
 ## Installation
 
 If you have `ghc` on your system you can install the language by running the `install.sh` script.
+The vscode extension can be installed by copying the `simple-script (extension)` folder into `~/.vscode/extensions`.
