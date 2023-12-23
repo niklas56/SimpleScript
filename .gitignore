@@ -1,5 +1,7 @@
 *.hi
 *.o
 *.txt
-*.script
+test.sc
 main
+sc
+*.swp
