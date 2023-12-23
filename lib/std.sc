@@ -5,21 +5,13 @@ pi = 3.14159265359
 //Functions
 
 fn remove(l, x):
-   newL = []
-   i = 0
-   while i < #l:
-      if l!i != x:
-         newL = newL + [l!i]
-      i = i+1
-   return newL
+   return [ y | y <- l, y != x ]
 
 fn removeAt(l, index):
    newL = []
-   i = 0
-   while i < #l:
+   for i = 0; i < #l; i+1:
       if i != index:
          newL = newL + [l!i]
-      i = i+1
    return newL
 
 fn removeFirst(l, x):
@@ -32,7 +24,7 @@ fn removeFirst(l, x):
 fn reverse(list):
    if list == []:
       return []
-   return [list!(#list-1)] + list.removeAt(#list-1)
+   return reverse(list.removeAt(0)) + [list!0]
 
 fn list(start, end, inc):
    if inc == 0:
@@ -42,9 +34,7 @@ fn list(start, end, inc):
    return [start] + list(start+inc, end, inc)
 
 fn abs(x):
-   if x < 0:
-      return -x
-   return x
+   return x < 0 ? -x : x
 
 fn toList(s):
    res = []
