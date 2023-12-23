@@ -6,7 +6,7 @@
  I build this project to learn the basics of Haskell.
 
 ## Features
-Simple Script is an imperative dynamically typed language, supporting the following types:
+Simple Script is an imperative dynamic-typed language, supporting the following types:
 
 | Type     | Description            |
 |----------|------------------------|
