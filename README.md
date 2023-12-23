@@ -32,7 +32,6 @@ and operators:
 | >                | Smaller                    |
 | <=               | Smaller or equal           |  
 | >=               | Bigger or equal            |
-| ==               | Comparison                 |
 | && / "and"       | And                        |
 | \|\| / "or"      | Or                         |
 | !                | Not                        |
